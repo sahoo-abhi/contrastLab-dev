@@ -160,13 +160,15 @@ h2 {
   font-size: 1.1rem;
 }
 
-.preview-panel img {
+.preview-panel img,
+.preview-image {
   width: 100%;
   max-height: 420px;
   object-fit: contain;
   border-radius: 10px;
   border: 1px solid var(--line);
   background: #f4f6f2;
+  cursor: pointer;
 }
 
 .combined-panel {
@@ -176,17 +178,16 @@ h2 {
   padding: 24px;
 }
 
-.preview-image-btn {
-  width: 100%;
-  padding: 0;
-  border: 0;
-  border-radius: 10px;
-  cursor: zoom-in;
-  background: transparent;
+.content-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
 }
 
-.preview-image-btn img {
-  display: block;
+@media (min-width: 920px) {
+  .content-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .preview-modal {
