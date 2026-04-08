@@ -169,6 +169,13 @@ h2 {
   background: #f4f6f2;
 }
 
+.combined-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+}
+
 .preview-image-btn {
   width: 100%;
   padding: 0;
@@ -186,7 +193,6 @@ h2 {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.76);
-  backdrop-filter: blur(2px);
   display: grid;
   place-items: center;
   padding: 1rem;
