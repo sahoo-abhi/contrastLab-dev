@@ -1,35 +1,5 @@
 import { useMemo, useState } from "react";
-
-const SAMPLE_FINDINGS = [
-  {
-    component: "Primary Navigation",
-    element: "Header menu links",
-    status: "pass",
-    guideline: "WCAG 1.4.3 Contrast (Minimum)",
-    note: "Estimated contrast ratio appears above 4.5:1 for normal text."
-  },
-  {
-    component: "Hero CTA Button",
-    element: "\"Try Free\" button",
-    status: "warning",
-    guideline: "WCAG 2.4.7 Focus Visible",
-    note: "Focus style may be weak; confirm keyboard-visible focus indicator."
-  },
-  {
-    component: "Form Field",
-    element: "Email input",
-    status: "fail",
-    guideline: "WCAG 3.3.2 Labels or Instructions",
-    note: "Input appears to rely on placeholder text without a persistent label."
-  },
-  {
-    component: "Feature Cards",
-    element: "Icon and descriptive text",
-    status: "pass",
-    guideline: "WCAG 1.1.1 Non-text Content",
-    note: "Detected decorative icons likely non-essential; verify alt handling in markup."
-  }
-];
+import { analyzeFontSizes } from "./utils/fontSizeAnalyzer";
 
 function App() {
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -37,14 +7,17 @@ function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [findings, setFindings] = useState([]);
+  const [analysisError, setAnalysisError] = useState(null);
 
   const summary = useMemo(() => {
-    const passes = SAMPLE_FINDINGS.filter((i) => i.status === "pass").length;
-    const warnings = SAMPLE_FINDINGS.filter((i) => i.status === "warning").length;
-    const fails = SAMPLE_FINDINGS.filter((i) => i.status === "fail").length;
+    const safeFindings = Array.isArray(findings) ? findings : [];
+    const passes = safeFindings.filter((i) => i.status === "pass").length;
+    const warnings = safeFindings.filter((i) => i.status === "warning").length;
+    const fails = safeFindings.filter((i) => i.status === "fail").length;
 
-    return { passes, warnings, fails, total: SAMPLE_FINDINGS.length };
-  }, []);
+    return { passes, warnings, fails, total: safeFindings.length };
+  }, [findings]);
 
   function handleUpload(event) {
     const file = event.target.files?.[0];
@@ -55,16 +28,47 @@ function App() {
     setFileName(file.name);
     setHasAnalyzed(false);
     setIsPreviewOpen(false);
+    setFindings([]);
+    setAnalysisError(null);
   }
 
-  function runAnalysis() {
+  async function runAnalysis() {
     if (!previewUrl) return;
 
     setIsAnalyzing(true);
-    setTimeout(() => {
-      setIsAnalyzing(false);
+    setAnalysisError(null);
+    setFindings([]);
+
+    try {
+      const result = await analyzeFontSizes(previewUrl);
+      
+      // Validate result structure
+      if (!result) {
+        setAnalysisError("Analysis returned no result");
+        setFindings([]);
+      } else if (result.error) {
+        // Error occurred during analysis
+        setAnalysisError(result.error);
+        setFindings(result.findings || []);
+      } else if (Array.isArray(result.findings) && result.findings.length > 0) {
+        // Success - findings available
+        setFindings(result.findings);
+        setAnalysisError(null);
+      } else {
+        // No findings but no error either
+        setAnalysisError("Could not analyze image. Please try another image.");
+        setFindings([]);
+      }
+      
       setHasAnalyzed(true);
-    }, 1400);
+    } catch (error) {
+      console.error("Analysis error:", error);
+      setAnalysisError(error.message || "Analysis failed. Please try again.");
+      setFindings([]);
+      setHasAnalyzed(true);
+    } finally {
+      setIsAnalyzing(false);
+    }
   }
 
   return (
@@ -133,6 +137,12 @@ function App() {
         <section className="panel results-panel">
           <h2>WCAG Findings</h2>
 
+          {analysisError && (
+            <div className="error-message">
+              <p>⚠️ {analysisError}</p>
+            </div>
+          )}
+
           {hasAnalyzed ? (
             <>
               <div className="summary-row">
@@ -143,17 +153,23 @@ function App() {
               </div>
 
               <ul className="finding-list">
-                {SAMPLE_FINDINGS.map((f) => (
-                  <li key={f.component + f.guideline}>
-                    <div className={`status-dot ${f.status}`} />
-                    <div>
-                      <p className="finding-title">{f.component}</p>
-                      <p className="finding-subtitle">{f.element}</p>
-                      <p className="finding-guideline">{f.guideline}</p>
-                      <p className="finding-note">{f.note}</p>
-                    </div>
+                {Array.isArray(findings) && findings.length > 0 ? (
+                  findings.map((f) => (
+                    <li key={f.component + f.guideline}>
+                      <div className={`status-dot ${f.status}`} />
+                      <div>
+                        <p className="finding-title">{f.component}</p>
+                        <p className="finding-guideline">{f.guideline}</p>
+                        <p className="finding-subtitle">{f.element}</p>
+                        <p className="finding-note">{f.note}</p>
+                      </div>
+                    </li>
+                  ))
+                ) : (
+                  <li style={{ padding: "1rem", color: "#656a63" }}>
+                    No findings to display
                   </li>
-                ))}
+                )}
               </ul>
             </>
           ) : (
