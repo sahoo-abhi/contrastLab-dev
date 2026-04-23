@@ -1,0 +1,11 @@
+{
+  "name": "wcag-font-size-checker",
+  "version": "1.0.0",
+  "description": "A Figma plugin to check WCAG font size compliance",
+  "author": "Your Name",
+  "license": "MIT",
+  "scripts": {
+    "build": "echo 'No build step needed for this plugin'",
+    "dev": "echo 'Use Figma app to load the plugin'"
+  }
+}

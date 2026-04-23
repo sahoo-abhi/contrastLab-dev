@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Font Size Checker</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      padding: 16px;
+    }
+
+    .container {
+      max-width: 100%;
+    }
+
+    header {
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 16px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #18a0fb;
+      color: white;
+    }
+
+    .btn-primary:hover { background: #0d66d0; }
+    .btn-primary:disabled { background: #a0d4f7; cursor: not-allowed; }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-secondary {
+      background: #e8e8e8;
+      color: #333;
+    }
+
+    .btn-secondary:hover { background: #d0d0d0; }
+
+    .filters {
+      margin-bottom: 16px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-label {
+      font-size: 11px;
+      color: #666;
+      font-weight: 500;
+      text-transform: uppercase;
+      align-self: center;
+    }
+
+    .filter-btn {
+      padding: 6px 12px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 3px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: unset;
+    }
+
+    .filter-btn.active {
+      background: #18a0fb;
+      color: white;
+      border-color: #18a0fb;
+    }
+
+    .filter-btn:hover { border-color: #18a0fb; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 12px;
+      border-radius: 4px;
+      border-left: 4px solid #999;
+    }
+
+    .stat-card.pass { border-left-color: #2d9b45; }
+    .stat-card.fail { border-left-color: #f24822; }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #18a0fb;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .results {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .result-item {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .result-item:hover {
+      border-color: #18a0fb;
+      box-shadow: 0 2px 8px rgba(24, 160, 251, 0.15);
+    }
+
+    .result-item.fail { border-left: 4px solid #f24822; }
+    .result-item.pass { border-left: 4px solid #2d9b45; }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .result-text {
+      font-size: 13px;
+      font-weight: 500;
+      flex: 1;
+      word-break: break-word;
+    }
+
+    .result-details {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #666;
+      gap: 12px;
+    }
+
+    .result-detail { flex: 1; }
+
+    .detail-label {
+      color: #999;
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .detail-value {
+      color: #333;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .level-badge {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .level-badge.pass {
+      background: #d4f4dd;
+      color: #2d9b45;
+    }
+
+    .level-badge.fail {
+      background: #fde8e4;
+      color: #f24822;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>✓ Font Size Checker</h1>
+      <p class="subtitle">Flags text layers below 16px</p>
+    </header>
+
+    <div class="button-group">
+      <button class="btn-primary" id="scanBtn">Scan Page</button>
+      <button class="btn-secondary" id="closeBtn">Close</button>
+    </div>
+
+    <div class="filters">
+      <span class="filter-label">Filter:</span>
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="fail">Failures only</button>
+      <button class="filter-btn" data-filter="pass">Passing only</button>
+    </div>
+
+    <div class="stats" id="stats" style="display: none;">
+      <div class="stat-card pass">
+        <div class="stat-value" id="passCount">0</div>
+        <div class="stat-label">Pass ✅ (≥16px)</div>
+      </div>
+      <div class="stat-card fail">
+        <div class="stat-value" id="failCount">0</div>
+        <div class="stat-label">Fail ❌ (&lt;16px)</div>
+      </div>
+    </div>
+
+    <div class="results" id="results">
+      <div class="empty">Run a scan to check your text</div>
+    </div>
+  </div>
+
+  <script>
+    let allResults = [];
+    let currentFilter = "all";
+
+    const scanBtn = document.getElementById("scanBtn");
+    const closeBtn = document.getElementById("closeBtn");
+    const resultsDiv = document.getElementById("results");
+    const statsDiv = document.getElementById("stats");
+
+    scanBtn.addEventListener("click", () => {
+      scanBtn.disabled = true;
+      scanBtn.textContent = "Scanning...";
+      resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+      parent.postMessage({ pluginMessage: { type: "SCAN_PAGE" } }, "*");
+    });
+
+    closeBtn.addEventListener("click", () => {
+      parent.postMessage({ pluginMessage: { type: "CLOSE" } }, "*");
+    });
+
+    document.querySelectorAll(".filter-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentFilter = btn.dataset.filter;
+        renderResults();
+      });
+    });
+
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (!msg) return;
+
+      if (msg.type === "SCAN_RESULTS") {
+        allResults = msg.data;
+        scanBtn.disabled = false;
+        scanBtn.textContent = "Scan Again";
+
+        const passCount = allResults.filter((r) => r.status === "pass").length;
+        const failCount = allResults.filter((r) => r.status === "fail").length;
+
+        document.getElementById("passCount").textContent = passCount;
+        document.getElementById("failCount").textContent = failCount;
+        statsDiv.style.display = "grid";
+
+        renderResults();
+      }
+    };
+
+    function renderResults() {
+      let filtered = allResults;
+      if (currentFilter === "fail") filtered = allResults.filter((r) => r.status === "fail");
+      if (currentFilter === "pass") filtered = allResults.filter((r) => r.status === "pass");
+
+      if (filtered.length === 0) {
+        resultsDiv.innerHTML = '<div class="empty">No results match this filter 🎉</div>';
+        return;
+      }
+
+      resultsDiv.innerHTML = filtered.map((result) => `
+        <div class="result-item ${result.status}" onclick="selectNode('${result.id}')">
+          <div class="result-header">
+            <div class="result-text">"${result.text}"</div>
+            <span class="level-badge ${result.status}">
+              ${result.status === "pass" ? "✅ Pass" : "❌ Fail"}
+            </span>
+          </div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="detail-label">Font Size</div>
+              <div class="detail-value">${result.fontSize}px</div>
+            </div>
+            <div class="result-detail">
+              <div class="detail-label">Weight</div>
+              <div class="detail-value">${result.fontWeightLabel}</div>
+            </div>
+            <div class="result-detail">
+              <div class="detail-label">Family</div>
+              <div class="detail-value">${result.fontFamily}</div>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function selectNode(nodeId) {
+      parent.postMessage({ pluginMessage: { type: "SELECT_NODE", nodeId } }, "*");
+    }
+  </script>
+</body>
+</html>
