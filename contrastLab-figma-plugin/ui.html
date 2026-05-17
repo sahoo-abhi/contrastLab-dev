@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contrast Lab</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    .screen {
+      display: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* ========== SELECTION SCREEN ========== */
+    #selectionScreen {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      text-align: center;
+      background: linear-gradient(135deg, #18a0fb 0%, #0d66d0 100%);
+      min-height: 100vh;
+    }
+
+    .selection-header {
+      margin-bottom: 48px;
+      color: white;
+    }
+
+    .selection-header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .selection-header p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .selection-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .app-btn {
+      padding: 20px 24px;
+      border: 2px solid white;
+      background: white;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .app-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .app-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* ========== DASHBOARD SCREEN ========== */
+    #dashboardScreen {
+      flex-direction: row;
+      height: 100vh;
+      padding: 0;
+    }
+
+    .dashboard-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      height: 100%;
+    }
+
+    .sidebar {
+      width: 180px;
+      background: #f9f9f9;
+      border-right: 1px solid #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      padding-top: 16px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      flex: 1;
+    }
+
+    .tab {
+      padding: 14px 16px;
+      border: none;
+      background: none;
+      font-size: 13px;
+      font-weight: 500;
+      color: #666;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+      text-align: left;
+      border-radius: 0;
+    }
+
+    .tab.active {
+      color: #18a0fb;
+      background: #e8f4ff;
+      border-left-color: #18a0fb;
+    }
+
+    .tab:hover {
+      background: #f0f0f0;
+    }
+
+    .tab:hover.active {
+      background: #e8f4ff;
+    }
+
+    .content-area {
+      flex: 1;
+      padding: 24px;
+    }
+
+    .dashboard-heading {
+      font-size: 24px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .scan-btn {
+      padding: 12px 20px;
+      background: #18a0fb;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 24px;
+      width: 100%;
+    }
+
+    .scan-btn:hover {
+      background: #0d66d0;
+    }
+
+    .scan-btn:disabled {
+      background: #a0d4f7;
+      cursor: not-allowed;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* ========== COMMON STYLES ========== */
+    .filters {
+      margin-bottom: 16px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-label {
+      font-size: 11px;
+      color: #666;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .filter-btn {
+      padding: 6px 12px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.active {
+      background: #18a0fb;
+      color: white;
+      border-color: #18a0fb;
+    }
+
+    .filter-btn:hover {
+      border-color: #18a0fb;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 24px;
+      border-radius: 8px;
+      border-left: 5px solid #999;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: all 0.2s;
+    }
+
+    .stat-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .stat-card.pass {
+      border-left-color: #2d9b45;
+      background: #f0fdf4;
+    }
+
+    .stat-card.fail {
+      border-left-color: #f24822;
+      background: #fff5f3;
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      margin-top: 8px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #18a0fb;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .results {
+      margin-bottom: 16px;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .pagination-btn {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pagination-btn:hover {
+      border-color: #18a0fb;
+      color: #18a0fb;
+    }
+
+    .pagination-btn.active {
+      background: #18a0fb;
+      color: white;
+      border-color: #18a0fb;
+    }
+
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination-info {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .result-item {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .result-item:hover {
+      border-color: #18a0fb;
+      box-shadow: 0 2px 8px rgba(24, 160, 251, 0.15);
+    }
+
+    .result-item.fail {
+      border-left: 4px solid #f24822;
+    }
+
+    .result-item.pass {
+      border-left: 4px solid #2d9b45;
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .result-text {
+      font-size: 13px;
+      font-weight: 500;
+      flex: 1;
+      word-break: break-word;
+    }
+
+    .result-details {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #666;
+      gap: 12px;
+    }
+
+    .result-detail {
+      flex: 1;
+    }
+
+    .detail-label {
+      color: #999;
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .detail-value {
+      color: #333;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .level-badge {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .level-badge.pass {
+      background: #d4f4dd;
+      color: #2d9b45;
+    }
+
+    .level-badge.fail {
+      background: #fde8e4;
+      color: #f24822;
+    }
+  </style>
+</head>
+<body>
+  <!-- SELECTION SCREEN -->
+  <div id="selectionScreen" class="screen active">
+    <div class="selection-header">
+      <h1>Font Size Checker</h1>
+      <p>Select your application type</p>
+    </div>
+    <div class="selection-buttons">
+      <button class="app-btn" data-app="web">Web Application</button>
+      <button class="app-btn" data-app="mobile">Mobile App</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD SCREEN -->
+  <div id="dashboardScreen" class="screen">
+    <div class="dashboard-container">
+      <div style="display: flex; flex: 1;">
+        <!-- SIDEBAR WITH TABS -->
+        <div class="sidebar">
+          <div class="tabs">
+            <button class="tab active" data-tab="fontsize">
+              Font Size
+            </button>
+            <button class="tab" data-tab="colors">
+              Colors
+            </button>
+          </div>
+        </div>
+
+        <!-- CONTENT AREA -->
+        <div class="content-area">
+          <!-- Font Size Tab -->
+          <div id="fontsize-tab" class="tab-content active">
+            <div class="dashboard-heading">Dashboard</div>
+            <button class="scan-btn" id="scanBtn">SCAN</button>
+
+            <div class="stats" id="stats" style="display: none;">
+              <div class="stat-card pass">
+                <div class="stat-value" id="passCount">0</div>
+                <div class="stat-label">Pass (≥16px)</div>
+              </div>
+              <div class="stat-card fail">
+                <div class="stat-value" id="failCount">0</div>
+                <div class="stat-label">Fail (<16px)</div>
+              </div>
+            </div>
+
+            <div class="filters">
+              <span class="filter-label">FILTER:</span>
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="fail">Failures only</button>
+              <button class="filter-btn" data-filter="pass">Passing only</button>
+            </div>
+
+            <div class="results" id="results">
+              <div class="empty">Run a scan to check your text</div>
+            </div>
+
+            <div class="pagination" id="pagination" style="display: none;">
+              <button class="pagination-btn" id="prevBtn" onclick="previousPage()">← Prev</button>
+              <span class="pagination-info" id="pageInfo"></span>
+              <button class="pagination-btn" id="nextBtn" onclick="nextPage()">Next →</button>
+            </div>
+          </div>
+
+          <!-- Colors Tab -->
+          <div id="colors-tab" class="tab-content">
+            <div class="empty" style="padding: 80px 20px;">
+              <p>Color contrast checker coming soon</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let appType = "";
+    let allResults = [];
+    let currentFilter = "all";
+    let currentPage = 1;
+    const itemsPerPage = 4;
+
+    const selectionScreen = document.getElementById("selectionScreen");
+    const dashboardScreen = document.getElementById("dashboardScreen");
+    const scanBtn = document.getElementById("scanBtn");
+    const resultsDiv = document.getElementById("results");
+    const statsDiv = document.getElementById("stats");
+
+    // App selection
+    document.querySelectorAll(".app-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        appType = btn.dataset.app;
+        switchToDashboard();
+      });
+    });
+
+    function switchToDashboard() {
+      selectionScreen.classList.remove("active");
+      dashboardScreen.classList.add("active");
+    }
+
+    // Tab switching
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const tabName = tab.dataset.tab;
+        document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(tabName + "-tab").classList.add("active");
+      });
+    });
+
+    // Scanning
+    scanBtn.addEventListener("click", () => {
+      scanBtn.disabled = true;
+      scanBtn.textContent = "Scanning...";
+      resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+      parent.postMessage({ pluginMessage: { type: "SCAN_PAGE", appType } }, "*");
+    });
+
+    // Filter buttons
+    document.querySelectorAll(".filter-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentFilter = btn.dataset.filter;
+        currentPage = 1; // Reset to page 1
+        renderResults();
+      });
+    });
+
+    // Receive scan results
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (!msg) return;
+
+      if (msg.type === "SCAN_RESULTS") {
+        allResults = msg.data;
+        scanBtn.disabled = false;
+        scanBtn.textContent = "SCAN";
+        currentPage = 1; // Reset pagination
+
+        const passCount = allResults.filter((r) => r.status === "pass").length;
+        const failCount = allResults.filter((r) => r.status === "fail").length;
+
+        document.getElementById("passCount").textContent = passCount;
+        document.getElementById("failCount").textContent = failCount;
+        statsDiv.style.display = "grid";
+
+        renderResults();
+      }
+    };
+
+    function renderResults() {
+      let filtered = allResults;
+      if (currentFilter === "fail") filtered = allResults.filter((r) => r.status === "fail");
+      if (currentFilter === "pass") filtered = allResults.filter((r) => r.status === "pass");
+
+      if (filtered.length === 0) {
+        resultsDiv.innerHTML = '<div class="empty">No results match this filter 🎉</div>';
+        document.getElementById("pagination").style.display = "none";
+        return;
+      }
+
+      const totalPages = Math.ceil(filtered.length / itemsPerPage);
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedResults = filtered.slice(startIndex, endIndex);
+
+      resultsDiv.innerHTML = paginatedResults
+        .map(
+          (result) => `
+        <div class="result-item ${result.status}" onclick="selectNode('${result.id}')">
+          <div class="result-header">
+            <div class="result-text">"${result.text}"</div>
+            <span class="level-badge ${result.status}">
+              ${result.status === "pass" ? "Pass" : "Fail"}
+            </span>
+          </div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="detail-label">Font Size</div>
+              <div class="detail-value">${result.fontSize}px</div>
+            </div>
+            <div class="result-detail">
+              <div class="detail-label">Weight</div>
+              <div class="detail-value">${result.fontWeightLabel}</div>
+            </div>
+            <div class="result-detail">
+              <div class="detail-label">Family</div>
+              <div class="detail-value">${result.fontFamily}</div>
+            </div>
+          </div>
+        </div>
+      `
+        )
+        .join("");
+
+      // Update pagination
+      if (totalPages > 1) {
+        document.getElementById("pagination").style.display = "flex";
+        document.getElementById("pageInfo").textContent = `Page ${currentPage} of ${totalPages}`;
+        document.getElementById("prevBtn").disabled = currentPage === 1;
+        document.getElementById("nextBtn").disabled = currentPage === totalPages;
+      } else {
+        document.getElementById("pagination").style.display = "none";
+      }
+    }
+
+    function nextPage() {
+      let filtered = allResults;
+      if (currentFilter === "fail") filtered = allResults.filter((r) => r.status === "fail");
+      if (currentFilter === "pass") filtered = allResults.filter((r) => r.status === "pass");
+      const totalPages = Math.ceil(filtered.length / itemsPerPage);
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderResults();
+      }
+    }
+
+    function previousPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderResults();
+      }
+    }
+
+    function selectNode(nodeId) {
+      parent.postMessage({ pluginMessage: { type: "SELECT_NODE", nodeId } }, "*");
+    }
+  </script>
+</body>
+</html>
