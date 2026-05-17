@@ -40,7 +40,7 @@ function getFontWeightLabel(weight) {
   return "Medium";
 }
 
-function scanPage() {
+function scanPage(appType = "web") {
   const nodes = getAllTextNodes(figma.currentPage, []);
   const results = [];
 
@@ -63,7 +63,8 @@ function scanPage() {
       fontFamily: fontFamily,
       isLarge: isLargeText(node),
       status: check16pxCompliance(node),   // ✅ "pass" or "fail"
-      fillColor: fillColor
+      fillColor: fillColor,
+      appType: appType
     };
 
     results.push(analysis);
@@ -74,10 +75,12 @@ function scanPage() {
 
 figma.ui.onmessage = function(msg) {
   if (msg.type === "SCAN_PAGE") {
-    const results = scanPage();
+    const appType = msg.appType; // "web" or "mobile"
+    const results = scanPage(appType);
     figma.ui.postMessage({
       type: "SCAN_RESULTS",
       data: results,
+      appType: appType,
       timestamp: new Date().toISOString()
     });
   }
@@ -95,4 +98,4 @@ figma.ui.onmessage = function(msg) {
   }
 };
 
-figma.showUI(__html__, { width: 500, height: 700 });
+figma.showUI(__html__, { width: 750, height: 700 });
